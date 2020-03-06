@@ -20,6 +20,7 @@ using Windows.UI.Input;
 using Windows.Storage.Streams;
 using System.Text;
 using System.Threading.Tasks;
+using static DialCNC.Controller;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -30,31 +31,21 @@ namespace DialCNC
     /// </summary>
     public sealed partial class MainPage : Page
     {
-
-        private SerialPort p;
-
-        private bool connected;
+        Controller cnc_controller;
 
         private ObservableCollection<string> Data { get; } = new ObservableCollection<string>();
 
-        readonly RadialController controller;
+        readonly RadialController radial_controller;
 
         private double mmPerRotation = 10;
-
-        private bool spindle;
-
-        private enum Axes
-        {
-            X,
-            Y,
-            Z,
-        }
 
         public MainPage()
         {
             this.InitializeComponent();
 
-            controller = RadialController.CreateForCurrentView();
+            cnc_controller = new Controller();
+
+            radial_controller = RadialController.CreateForCurrentView();
 
             RadialControllerConfiguration myConfiguration = RadialControllerConfiguration.GetForCurrentView();
             myConfiguration.SetDefaultMenuItems(new[] {
@@ -74,15 +65,15 @@ namespace DialCNC
             yAxisItem.Tag = Axes.Y;
             zAxisItem.Tag = Axes.Z;
 
-            controller.Menu.Items.Add(xAxisItem);
-            controller.Menu.Items.Add(yAxisItem);
-            controller.Menu.Items.Add(zAxisItem);
+            radial_controller.Menu.Items.Add(xAxisItem);
+            radial_controller.Menu.Items.Add(yAxisItem);
+            radial_controller.Menu.Items.Add(zAxisItem);
 
-            controller.UseAutomaticHapticFeedback = true;
-            controller.RotationResolutionInDegrees = 5;
+            radial_controller.UseAutomaticHapticFeedback = true;
+            radial_controller.RotationResolutionInDegrees = 5;
 
-            controller.RotationChanged += Controller_RotationChanged;
-            controller.ButtonClicked += Controller_ButtonClicked;
+            radial_controller.RotationChanged += Controller_RotationChanged;
+            radial_controller.ButtonClicked += Controller_ButtonClicked;
 
             // foreach (var name in SerialPort.GetPortNames())
             // {
@@ -93,7 +84,7 @@ namespace DialCNC
 
             connect_button.Click += Connect_button_Click;
             stop_button.Click += Stop_button_Click;
-            send_button.Click += Send_button_Click;
+            //send_button.Click += Send_button_Click;
             unlock_button.Click += Unlock_button_Click;
 
             left_button.Click += Left_button_Click;
@@ -106,6 +97,63 @@ namespace DialCNC
             live_checkBox.Checked += Live_checkBox_Checked;
             live_checkBox.Unchecked += Live_checkBox_Unchecked;
             go_button.Click += Go_button_Click;
+            to_origin_button.Click += To_origin_button_Click;
+            to_work_origin_button.Click += To_work_origin_button_Click;
+            zero_work_button.Click += Zero_work_button_Click;
+
+            cnc_controller.StatusChanged += Cnc_controller_StatusChanged;
+            cnc_controller.PositionChanged += Cnc_controller_PositionChanged;
+        }
+
+        private void Zero_work_button_Click(object sender, RoutedEventArgs e)
+        {
+            cnc_controller.ZeroWork();
+        }
+
+        private void To_origin_button_Click(object sender, RoutedEventArgs e)
+        {
+            cnc_controller.MoveAbsolute(0, 0, 0);
+        }
+
+        private void To_work_origin_button_Click(object sender, RoutedEventArgs e)
+        {
+            cnc_controller.MoveAbsolute(0, 0, 0);
+        }
+
+        private void Cnc_controller_PositionChanged(object sender, EventArgs e)
+        {
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                string mx = cnc_controller.MachinePosition.X.ToString("0.00");
+                string my = cnc_controller.MachinePosition.Y.ToString("0.00");
+                string mz = cnc_controller.MachinePosition.Z.ToString("0.00");
+
+                x_get_text.Text = mx;
+                y_get_text.Text = my;
+                z_get_text.Text = mz;
+
+                string wx = cnc_controller.WorkPosition.X.ToString("0.00");
+                string wy = cnc_controller.WorkPosition.Y.ToString("0.00");
+                string wz = cnc_controller.WorkPosition.Z.ToString("0.00");
+
+                x_work_text.Text = wx;
+                y_work_text.Text = wy;
+                z_work_text.Text = wz;
+
+                if (live_checkBox.IsChecked.Value)
+                {
+                    if (x_set_text.FocusState == FocusState.Unfocused) x_set_text.Text = wx;
+                    if (y_set_text.FocusState == FocusState.Unfocused) y_set_text.Text = wy;
+                    if (z_set_text.FocusState == FocusState.Unfocused) z_set_text.Text = wz;
+                }
+            });
+        }
+
+        private void Cnc_controller_StatusChanged(object sender, EventArgs e) {
+            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                status_text.Text = cnc_controller.Status == ControllerStatus.Idle ? "Idle" : (cnc_controller.Status == ControllerStatus.Run ? "Run" : (cnc_controller.Status == ControllerStatus.Alarm ? "Alarm" : "Unknown"));
+            });
         }
 
         private void Go_button_Click(object sender, RoutedEventArgs e)
@@ -115,7 +163,7 @@ namespace DialCNC
                 var x = double.Parse(x_set_text.Text);
                 var y = double.Parse(y_set_text.Text);
                 var z = double.Parse(z_set_text.Text);
-                MoveAbsolute(x, y, z);
+                cnc_controller.MoveAbsolute(x, y, z);
             }
             catch (ArgumentNullException) { }
             catch (FormatException) { }
@@ -138,7 +186,7 @@ namespace DialCNC
                 try
                 {
                     var v = double.Parse(((TextBox)sender).Text);
-                    MoveAbsolute(Axes.X, v);
+                    cnc_controller.MoveAbsolute(Axes.X, v);
                 }
                 catch (ArgumentNullException) { }
                 catch (FormatException) { }
@@ -151,7 +199,7 @@ namespace DialCNC
                 try
                 {
                     var v = double.Parse(((TextBox)sender).Text);
-                    MoveAbsolute(Axes.Y, v);
+                    cnc_controller.MoveAbsolute(Axes.Y, v);
                 }
                 catch (ArgumentNullException) { }
                 catch (FormatException) { }
@@ -165,7 +213,7 @@ namespace DialCNC
                 try
                 {
                     var v = double.Parse(((TextBox)sender).Text);
-                    MoveAbsolute(Axes.Z, v);
+                    cnc_controller.MoveAbsolute(Axes.Z, v);
                 }
                 catch (ArgumentNullException) { }
                 catch (FormatException) { }
@@ -174,174 +222,51 @@ namespace DialCNC
 
         private void Connect_button_Click(object sender, RoutedEventArgs e)
         {
-            if (connected)
+            if (cnc_controller.IsConnected)
             {
-                disconnect();
+                cnc_controller.Disconnect();
             }
             else
             {
-                connect();
+                cnc_controller.Connect();
             }
-        }
-
-        private void disconnect()
-        {
-            connected = false;
-            connect_button.Content = "Connect";
-            p.Close();
-        }
-
-        private void connect()
-        {
-            try
-            {
-                if (p == null)
-                {
-                    p = new SerialPort("COM6");
-                }
-
-                p.BaudRate = 115200;
-
-                p.Open();
-
-                connected = true;
-                connect_button.Content = "Disconnect";
-
-                p.DataReceived += S_DataReceived;
-                p.ErrorReceived += P_ErrorReceived;
-
-                input_text.IsEnabled = true;
-                send_button.IsEnabled = true;
-
-                Action runPositionLoop = null;
-
-                runPositionLoop = () =>
-                {
-                    QueryPosition();
-
-                    if (connected)
-                    {
-                        _ = SetTimeout(runPositionLoop, TimeSpan.FromMilliseconds(100));
-                    }
-                };
-
-                runPositionLoop();
-
-            }
-            catch (Exception ex)
-            {
-                Data.Add("Error: " + ex.Message);
-            }
-        }
-
-        private void QueryPosition()
-        {
-            p.WriteLine("?");
-        }
-
-        private void P_ErrorReceived(object sender, SerialErrorReceivedEventArgs e)
-        {
-            connected = false;
-        }
-
-        private async void S_DataReceived(object sender, SerialDataReceivedEventArgs e)
-        {
-            var data = p.ReadLine();
-
-            if (data[0] == '<')
-            {
-                ParseStatusLine(data);
-            }
-            else
-            {
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => Data.Add(data));
-            }
-        }
-
-        private void ParseStatusLine(string data)
-        {
-            var parts = data.Split(',');
-
-            var x = parts[1].Split(':')[1];
-            var y = parts[2];
-            var z = parts[3];
-
-            _ = Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
-            {
-                x_get_text.Text = x;
-                y_get_text.Text = y;
-                z_get_text.Text = z;
-
-                if (live_checkBox.IsChecked.Value)
-                {
-                    if(x_set_text.FocusState == FocusState.Unfocused) x_set_text.Text = x;
-                    if (y_set_text.FocusState == FocusState.Unfocused) y_set_text.Text = y;
-                    if (z_set_text.FocusState == FocusState.Unfocused) z_set_text.Text = z;
-                }
-            });
         }
 
         private void Unlock_button_Click(object sender, RoutedEventArgs e)
         {
-            p?.WriteLine("$X");
+            cnc_controller.Unlock();
         }
 
         private void Stop_button_Click(object sender, RoutedEventArgs e)
         {
-            char stopCode = (char)0x85;
-            p?.WriteLine(stopCode.ToString());
+            cnc_controller.Stop();
         }
 
         private void Controller_ButtonClicked(RadialController sender, RadialControllerButtonClickedEventArgs args)
         {
-            spindle = !spindle;
-            p?.WriteLine(spindle ? "M3 S100" : "M5");
+            cnc_controller.SpindleRunning = !cnc_controller.SpindleRunning;
         }
 
         private void Controller_RotationChanged(RadialController sender, RadialControllerRotationChangedEventArgs args)
         {
             var menuItem = sender.Menu.GetSelectedMenuItem();
 
-            Move((Axes)menuItem.Tag, args.RotationDeltaInDegrees * mmPerRotation / 360);
+            cnc_controller.Move((Axes)menuItem.Tag, args.RotationDeltaInDegrees * mmPerRotation / 360);
         }
 
-        private void Send_button_Click(object sender, RoutedEventArgs e)
-        {
-            p?.WriteLine(input_text.Text);
-        }
+        //private void Send_button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    p?.WriteLine(input_text.Text);
+        //}
 
         private void Right_button_Click(object sender, RoutedEventArgs e)
         {
-            Move(Axes.X, 1);
+            cnc_controller.Move(Axes.X, 1);
         }
 
         private void Left_button_Click(object sender, RoutedEventArgs e)
         {
-            Move(Axes.X, -1);
-        }
-
-        private void Move(Axes a, double v)
-        {
-            var a_str = a == Axes.X ? "X" : (a == Axes.Y ? " Y" : "Z");
-            p?.WriteLine("G91G0" + a_str + v);
-        }
-
-        private void MoveAbsolute(Axes a, double v)
-        {
-            var a_str = a == Axes.X ? "X" : (a == Axes.Y ? " Y" : "Z");
-            p?.WriteLine("G90G0" + a_str + v);
-        }
-
-        private void MoveAbsolute(double x, double y, double z)
-        {
-            p?.WriteLine("G90G0X" + x + "Y" + y + "Z" + z);
-        }
-
-        public static async Task SetTimeout(Action action, TimeSpan timeout)
-        {
-            await Task.Delay(timeout).ConfigureAwait(false);
-
-            action();
+            cnc_controller.Move(Axes.X, -1);
         }
 
         

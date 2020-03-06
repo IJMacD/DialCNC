@@ -23,6 +23,8 @@
         <TextBox x:Name="input_text" Text="" IsEnabled="True" TextWrapping="Wrap" Margin="10,47,66,921"/>
         <Button x:Name="send_button" Content="Send" IsEnabled="False"  Margin="1439,47,10,0" VerticalAlignment="Top" HorizontalAlignment="Right"/>
         <Button x:Name="stop_button" Content="STOP" Margin="412,10,0,0" VerticalAlignment="Top"/>
+        <Button x:Name="go_button" Content="Go" Margin="43,246,0,0" VerticalAlignment="Top"/>
+        <TextBlock x:Name="status_text" HorizontalAlignment="Left" Margin="538,17,0,0" Text="" TextWrapping="Wrap" VerticalAlignment="Top"/>
 
         <Grid>
             <TextBlock x:Name="x_set_label" HorizontalAlignment="Left" Margin="10,101,0,0" Text="X" TextWrapping="Wrap" VerticalAlignment="Top"/>
@@ -31,16 +33,29 @@
             <TextBox x:Name="y_set_text" HorizontalAlignment="Left" Margin="42,134,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
             <TextBlock x:Name="z_set_label" HorizontalAlignment="Left" Margin="10,179,0,0" Text="Z" TextWrapping="Wrap" VerticalAlignment="Top"/>
             <TextBox x:Name="z_set_text" HorizontalAlignment="Left" Margin="42,172,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
-        </Grid>
-        <Grid>
-            <TextBlock x:Name="x_get_label" HorizontalAlignment="Left" Margin="172,101,0,0" Text="X" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <TextBlock x:Name="x_get_text" HorizontalAlignment="Left" Margin="213,94,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <TextBlock x:Name="y_get_label" HorizontalAlignment="Left" Margin="172,141,0,0" Text="Y" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <TextBlock x:Name="y_get_text" HorizontalAlignment="Left" Margin="213,134,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <TextBlock x:Name="z_get_label" HorizontalAlignment="Left" Margin="172,179,0,0" Text="Z" TextWrapping="Wrap" VerticalAlignment="Top"/>
-            <TextBlock x:Name="z_get_text" HorizontalAlignment="Left" Margin="213,172,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
             <CheckBox x:Name="live_checkBox" Content="Live" Margin="43,209,0,0" VerticalAlignment="Top" Width="66"/>
-            <Button x:Name="go_button" Content="Go" Margin="43,246,0,0" VerticalAlignment="Top"/>
+            <TextBlock x:Name="textBlock" HorizontalAlignment="Left" Margin="10,58,0,0" Text="Set" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        </Grid>
+        <Grid Margin="50,0,0,0">
+            <TextBlock x:Name="x_get_label" HorizontalAlignment="Left" Margin="172,101,0,0" Text="X" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="x_get_text" HorizontalAlignment="Left" Margin="213,101,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="y_get_label" HorizontalAlignment="Left" Margin="172,141,0,0" Text="Y" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="y_get_text" HorizontalAlignment="Left" Margin="213,141,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="z_get_label" HorizontalAlignment="Left" Margin="172,179,0,0" Text="Z" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="z_get_text" HorizontalAlignment="Left" Margin="213,179,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <Button x:Name="to_origin_button" Content="To Origin" IsEnabled="False" Margin="172,246,0,0" VerticalAlignment="Top"/>
+            <TextBlock x:Name="machine_label" HorizontalAlignment="Left" Margin="172,57,0,0" Text="Machine" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        </Grid>
+        <Grid Margin="172,0,0,0">
+            <TextBlock x:Name="x_work_label" HorizontalAlignment="Left" Margin="172,101,0,0" Text="X" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="x_work_text" HorizontalAlignment="Left" Margin="213,101,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="y_work_label" HorizontalAlignment="Left" Margin="172,141,0,0" Text="Y" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="y_work_text" HorizontalAlignment="Left" Margin="213,141,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="z_work_label" HorizontalAlignment="Left" Margin="172,179,0,0" Text="Z" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <TextBlock x:Name="z_work_text" HorizontalAlignment="Left" Margin="213,179,0,0" Text="0.00" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <Button x:Name="to_work_origin_button" Content="To Origin" Margin="172,246,0,0" VerticalAlignment="Top"/>
+            <TextBlock x:Name="work_label" HorizontalAlignment="Left" Margin="172,59,0,0" Text="Work" TextWrapping="Wrap" VerticalAlignment="Top"/>
+            <Button x:Name="zero_work_button" Content="Zero" Margin="172,209,0,0" VerticalAlignment="Top"/>
         </Grid>
         <Button x:Name="unlock_button" Content="Unlock" Margin="470,10,0,0" VerticalAlignment="Top"/>
 
